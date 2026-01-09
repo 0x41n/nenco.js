@@ -69,7 +69,7 @@ console.log(array); // "こんにちは"
 数値の配列から、文字コードを推測します。
 ```js
 const array = [48, 83, 48, 147, 48, 107, 48, 97, 48, 111];
-const encoding = nenco.detext(array);
+const encoding = nenco.detect(array);
 console.log(encoding); // "utf16"
 ```
 
