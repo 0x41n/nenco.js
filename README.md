@@ -65,7 +65,7 @@ console.log(array); // "こんにちは"
 
 ---
 
-### `nenco.detext(array)`
+### `nenco.detect(array)`
 数値の配列から、文字コードを推測します。
 ```js
 const array = [48, 83, 48, 147, 48, 107, 48, 97, 48, 111];
