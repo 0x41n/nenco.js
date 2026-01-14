@@ -26,10 +26,11 @@ TextEncoderなどを使わず力技で変換しているのも特徴です。
 |UTF-16LE|`UTF-16LE`, `UTF16LE`||
 |UTF-32BE|`UTF-32BE`, `UTF-32`, `UTF32`|`BE`や`LE`を省略すると`BE`になります|
 |UTF-32LE|`UTF-32LE`, `UTF32LE`||
-|Shift_JIS|`Shift_JIS`, `SJIS`, `MS_Kanji`, `x-sjis`||
-|Shift_JIS-2004|`Shift_JIS-2004`, `SJIS2004`|`Shift_JIS`を指定したときもこのコードでencodeされます|
+|Shift_JIS|`Shift_JIS`, `SJIS`, `MS_Kanji`, `x-sjis`|Shift_JIS-2004として変換されます|
+|CP932|`CP932`, `MS932`, `Windows-31J`|`Shift_JIS`の亜種|
 |EUC-JP|`EUC-JP`, `x-eucjp`||
-|ISO-2022-JP|`ISO-2022-JP`, `JIS`|`JIS X 0213`部分まで対応(ISO-2022-JP-2004?)|
+|EUC-JIS-2004|`EUC-JIS-2004`, `EUC-JISX0213`||
+|ISO-2022-JP|`ISO-2022-JP`, `JIS`|`ISO-2022-JP`, `ISO-2022-JP-1`, `ISO-2022-JP-3`, `ISO-2022-JP-2004`に対応|
 
 ## できること
 ### `nenco.encode(text, encoding, bom?)`
@@ -45,6 +46,7 @@ const text = "こんにちは";
 const array = nenco.encode(text, "UTF16BE", true);
 console.log(array); // [254, 255, 48, 83, 48, 147, 48, 107, 48, 97, 48, 111]
 ```
+- 対応していない文字は`?`として変換されます。
 ---
 ### `nenco.decode(array, encoding?)`
 数値の配列を指定した文字コードをもとに、文字列に変換します。
@@ -60,8 +62,8 @@ const array = [48, 83, 48, 147, 48, 107, 48, 97, 48, 111];
 const text = nenco.decode(array);
 console.log(array); // "こんにちは"
 ```
-変換できなかった文字は`?`に置換されて返ってきます。<br>
-不正な配列だった場合は`false`が返ってきます。
+- 対応していない文字は`?`として変換されます。
+- 不正なバイト列が含まれていた場合、`false`が返されます。
 
 ---
 
@@ -73,6 +75,16 @@ const encoding = nenco.detect(array);
 console.log(encoding); // "utf16"
 ```
 
+---
+
+### `nenco.convert(array, from, to, bom?)`
+数値の配列のエンコードを変換します。
+```js
+const array = [48, 83, 48, 147, 48, 107, 48, 97, 48, 111];
+const bytes = nenco.convert(array, 'UTF16BE', 'SJIS');
+console.log(bytes); // [130, 177, 130, 241, 130, 201, 130, 191, 130, 205]
+```
+- 対応していない文字は`?`として変換されます。
 ## おまけ
 [encoding.js](https://github.com/polygonplanet/encoding.js)よろしく、日本語のちょっとした変換が出来ます。<br>
 文字列を入れて、文字列を受け取るような関数です。
