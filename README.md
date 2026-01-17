@@ -3,11 +3,11 @@
 
 ## これはなに？
 JavaScriptで文字コードの変換とか判定をします。<br>
-[encoding.js](https://github.com/polygonplanet/encoding.js)みたいなやつです。<br>
+<a href=https://github.com/polygonplanet/encoding.js target=_blank rel='noopener noreferrer'>encoding.js</a>みたいなやつです。<br>
 機能はとっても少ないです。
 
 ## デモ
-[ここ](https://0x41n.github.io/nenco.js/demo)で機能のテストができます。
+<a href=https://0x41n.github.io/nenco.js/demo target=_blank rel='noopener noreferrer'>ここ</a>で機能のテストができます。
 
 ## 特徴
 jsファイル一つで完結しているので使いまわしやすいと思われます。<br>
@@ -105,3 +105,4 @@ console.log(bytes); // [130, 177, 130, 241, 130, 201, 130, 191, 130, 205]
 すべての環境に対応するように作ったわけではないので、<br>
 
 使いやすい形に加工してお使いください。
+
