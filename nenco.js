@@ -50,6 +50,7 @@ ENCODING={
 	jis:['jis','iso2022jp','csiso2022jp'],
 },
 //ascii,han-kana,jisx0208,jisx0212,jisx0213-1,jisx0213-2
+BOM=[[0xEF,0xBB,0xBF],[0,0,0xFE,0xFF],[0xFF,0xFE,0,0],[0xFE,0xFF],[0xFF,0xFE]],
 ISOESC=[[0x1B,0x28,0x42],[0x1B,0x28,0x49],[0x1B,0x24,0x42],[0x1B,0x24,0x28,0x44],[0x1B,0x24,0x28,0x4F],[0x1B,0x24,0x28,0x50]],
 JISX0208=[
 	[0x21,"　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー—‐／＼〜‖｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋−±×÷＝≠＜＞≦≧∞∴♂♀°′″℃￥＄¢£％＃＆＊＠§☆★○●◎◇◆□■△▲▽▼※〒→←↑↓〓"],
@@ -115,6 +116,7 @@ ezweb=[
 fromUTF8=n=>{
 	let i=0,l=len(n),r='',t;
 	if(!isArray(n)||!l)return false;
+	if(equals(a,BOM[0]))i=3;
 	while(i<l){
 		let c=n[i];
 		if(c<0x80)t=c,i++;
@@ -149,6 +151,7 @@ toUTF8=n=>{
 fromUTF16=(n,le=false)=>{
 	let i=0,l=len(n),r='',t;
 	if(!isArray(n)||!l||l%2!=0)return false;
+	if(equals(a,le?BOM[4]:BOM[3]))i=2;
 	while(i<l){
 		let c=n[i];
 		t=le?c|(n[i+1]<<8):(c<<8)|n[i+1];
@@ -177,6 +180,7 @@ toUTF16=(n,le=false)=>{
 fromUTF32=(n,le=false)=>{
 	let i=0,l=len(n),r='',t;
 	if(!isArray(n)||!l||l%4!=0)return false;
+	if(equals(a,le?BOM[2]:BOM[1]))i=4;
 	while(i<l){
 		let c=n[i];
 		if(i+3<l) t=le?c|(n[i+1]<<8)|(n[i+2]<<16)|(n[i+3]<<24):(c<<24)|(n[i+1]<<16)|(n[i+2]<<8)|n[i+3], i+=4;
@@ -250,11 +254,11 @@ encode=(s,e,bom=false)=>{ // s => uint8array
 	let q, r=[], l=len(s), enc=resolveEnc(e),
 	le16=enc=='utf16le', le32=enc=='utf32le', cp932=enc=='cp932', ex=enc=='eucjis2004';
 	if(enc=='utf16'||le16){
-		if(bom) r=le16?[0xFF,0xFE]:[0xFE,0xFF];
+		if(bom) r=le16?BOM[4]:BOM[3];
 		for(q of s) r.push(...toUTF16(cp(q),le16));
 	}
 	else if(enc=='utf32'||le32){
-		if(bom) r=le32?[0xFF,0xFE,0,0]:[0,0,0xFE,0xFF];
+		if(bom) r=le32?BOM[2]:BOM[1];
 		for(q of s) r.push(...toUTF32(cp(q),le32));
 	}
 	else if(enc=='sjis'||cp932){
@@ -304,7 +308,7 @@ encode=(s,e,bom=false)=>{ // s => uint8array
 		if(stt>0)r.push(...ISOESC[0]);
 	}
 	else{ // utf8
-		if(bom) r=[0xEF,0xBB,0xBF];
+		if(bom) r=BOM[0];
 		for(q of s) r.push(...toUTF8(cp(q)));
 	}
 	return new Uint8Array(r);
@@ -364,11 +368,11 @@ detect=(a,multi=false)=>{
 	let l = len(a), fall='utf8';
 	if(!a||l<1) return fall;
 	// BOM
-	if(equals(a, [0xEF,0xBB,0xBF])) return "utf8";
-	if(equals(a, [0,0,0xFE,0xFF])) return "utf32";
-	if(equals(a, [0xFF,0xFE,0,0])) return "utf32le";
-	if(equals(a, [0xFE,0xFF])) return "utf16";
-	if(equals(a, [0xFF,0xFE])) return "utf16le";
+	if(equals(a, BOM[0])) return "utf8";
+	if(equals(a, BOM[1])) return "utf32";
+	if(equals(a, BOM[2])) return "utf32le";
+	if(equals(a, BOM[3])) return "utf16";
+	if(equals(a, BOM[4])) return "utf16le";
 	// re-encode
 	let q,i=0,c=0,flag=0,en=["sjis","cp932","eucjp","eucjis2004","utf8","utf16","utf16le","utf32","utf32le"];
 	for(;i<en.length;i++){
