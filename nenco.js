@@ -197,9 +197,8 @@ toJIS=(c,max=5)=>{
 	if(!f&&cp(c)<0x80)return [[cp(c)],0];
 	let t,
 	check=(tbl,esc)=>{
-		for(let [code, char] of tbl){
-			if(char==c) return [[code>>8,code&255],esc];
-		}
+		let code=tbl[1][c];
+		return code?[[code>>8,code&255],esc]:code;
 	};
 	for(t of [[jis.x208,2],[jis.x212,3],[jis.x213_1,4],[jis.x213_2,5]]){
 		if(max>0&&t[1]>max) break;
@@ -211,7 +210,7 @@ toJIS=(c,max=5)=>{
 },
 fromJIS=(ku,ten,esc,fall=UNDEF.char)=>{
 	let a=esc>4?jis.x213_2:esc>3?jis.x213_1:esc>2?jis.x212:jis.x208;
-	return a.get((ku<<8)|ten)||fall;
+	return a[0][(ku<<8)|ten]||fall;
 },
 toSJIS=c=>{
 	let f=len(c)>1, cc=f?-1:cp(c);
@@ -230,7 +229,7 @@ fromSJIS=(b1,b2,cp932=false)=>{
 	if((b1>0x80&&b1<0xA0)||(b1>0xDF&&b1<0xFD)&&b2>0x3F&&b2<0xFD&&b2!=0x7F){
 		let odd=b2>0x9E,ku=(b1-(b1>0x9F?0xB1:0x71))*2+(odd?2:1),ten=b2-(odd?0x7E:b2>0x7F?0x20:0x1F),
 		c=fromJIS(ku,ten,2,false);
-		if(cp932) return jis.cp932.get(b1<<8|b2) || c;
+		if(cp932) return jis.cp932[0][b1<<8|b2] || c;
 		if(c) return c;
 		if(b1<0xA0) return fromJIS(ku,ten,4);
 		return fromJIS(0x20+(b1>0xF4||(b1==0xF4&&odd)?2*b1-0x19A:SJIS0213_2_hi[2*(b1-0xF0)+(odd?1:0)]),ten,5);
@@ -266,11 +265,8 @@ encode=(s,e,bom=false)=>{ // s => uint8array
 			let t, q=s[i], cb=i+1<l&&(isComb(cp(s[i+1]))||(q=='˩'&&s[i+1]=='˥')||(q=='˥'&&s[i+1]=='˩'));
 			if(cb) i++, q+=s[i];
 			if(cp932){
-				let code,char,co;
-				for([code, char] of jis.cp932){
-					if(q==char){co=true;r.push(code>>8,code&255);break}
-				}
-				if(co)continue;
+				let code=jis.cp932[1][q];
+				if(code){r.push(code>>8,code&255);continue}
 			}
 			t=toSJIS(q);
 			if(cp932||t[0]>=0) r.push(...(cp932&&t[0]<0?[UNDEF.code]:t));
@@ -466,7 +462,7 @@ toHira=s=>hanKana(s).replace(/[ァ-ヿ]/g,t=>fp(cp(t)-0x60)),
 toKata=s=>s.replace(/[ぁ-ゟ]/g,t=>fp(cp(t)+0x60)),
 // マップ作成
 mapJIS=tbl=>{
-	let q,i,s,cc,r=new Map();
+	let q,i,s,cc,r=[[],{}];
 	for(q of tbl){
 		s=q[0];
 		if(s<0x100)s=(s<<8)|0x21;
@@ -474,7 +470,9 @@ mapJIS=tbl=>{
 		for(i=0;i<l;i++){
 			cc=qq[i];
 			if(i+1<l&&(isComb(cp(qq[i+1]))||(qq[i]=='˩'&&qq[i+1]=='˥')||(qq[i]=='˥'&&qq[i+1]=='˩')))i++,cc+=qq[i];
-			r.set(s, cc);
+			// r.set(s, cc);
+			r[0][s]=cc;
+			r[1][cc]=r[1][cc]||s;
 			s++;
 			if((s&255)==127)s+=162;
 		}
@@ -482,7 +480,7 @@ mapJIS=tbl=>{
 	return r;
 },
 mapSJIS=tbl=>{
-	let q,i,s,cc,r=new Map();
+	let q,i,s,cc,r=[[],{}];
 	for(q of tbl){
 		s=q[0];
 		if(s<0x100)s=(s<<8)|0x40;
@@ -490,7 +488,9 @@ mapSJIS=tbl=>{
 		for(i=0;i<l;i++){
 			cc=qq[i];
 			if(i+1<l&&isComb(cp(qq[i+1])))i++,cc+=qq[i];
-			r.set(s, cc);
+			// r.set(s, cc);
+			r[0][s]=cc;
+			r[1][cc]=r[1][cc]||s;
 			s++;
 			if((s&255)==127)s++;
 			if((s&255)==253)s+=67;
