@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang=ja>
+<head><meta charset=utf-8><title>nenco demo</title>
+<link rel=icon type=image/svg+xml href=https://0x41n.github.io/file/fav.svg>
+</head>
+<style>
+body{padding:3em 8em;line-height:1.7em}
+a{text-decoration:none}
+a:hover{text-decoration:underline}
+p{margin:0}
+textarea{resize:none;width:100%;height:8em;padding:1em;box-sizing:border-box}
+article{width:50%}
+select{padding:.5em;margin:0 1em;box-sizing:border-box}
+.flex{display:flex}
+.non{user-select:none}
+.center{text-align:center}
+.small{font-size:small}
+</style>
+<script src=./nenco.js></script>
+<body>
+<h1><a href=https://github.com/0x41n/nenco.js>nenco.js</a>デモ</h1>
+<h3>ファイル読み込みテスト</h3>
+<div class=flex>
+<article>
+<input type=button value='ファイルを選択' onclick=util.upload(file_decode)> <span id=fn></span><br>
+<p id=result>ファイルから判定した文字コード : </p>
+</article>
+<article>「ファイルを選択」から<br>もしくはファイルをドラッグ&ドロップしてください。</article>
+</div>
+<textarea id=ta></textarea>
+<h3>文字コード変換テスト</h3>
+</body>
+<script src="./nenco.js"></script>
+<div class=flex onchange=text_encode()>
+<article>
+<textarea id=before placeholder=ここに文字を入力></textarea>
+</article>
+<div class='non center'><select id=from></select><br>
+<label onclick=text_encode><input type=checkbox id=bom>BOMをつける</label><br>
+<p id=enco class=small></p>
+</div>
+<article><textarea id=after disabled></textarea></article>
+</div>
+<div class=flex onchange=text_encode()>
+<article><textarea id=bhex disabled></textarea></article>
+<div class='non center'><select id=to></select><br><p id=deco class=small></p>
+<p id=det></p></div>
+<article><textarea id=ahex disabled></textarea></article>
+</div>
+<script>
+const
+util={
+	upload(callback){
+		let e=document.createElement("input");
+		e.setAttribute("type","file");
+		e.click();
+		e.addEventListener("change",f=>{
+			this.f2u8(f.target.files[0], callback);
+			e.remove();
+		});
+	},
+	f2u8(f, callback){
+		let r=new FileReader();
+		r.onload=_=>{
+			callback(new Uint8Array(r.result), f.name);
+		}
+		r.readAsArrayBuffer(f);
+	},
+	dragdrop(callback, e = document){
+		const self = this;
+		e.addEventListener("dragover",t=>t.preventDefault());
+		e.addEventListener("drop",t=>{
+			t.preventDefault();
+			const files = t.dataTransfer.files;
+			for (let f of files){
+				self.f2u8(f, callback);
+			}
+		});
+		if(typeof e.classList == "undefined" || typeof e.classList.add == "function") return;
+		e.addEventListener("dragenter",_=>e.classList.add("drag-hover"));
+		e.addEventListener("dragleave",_=>e.classList.remove("drag-hover"));
+	}
+},
+file_decode=(a,n)=>{
+	let enc=nenco.detect(a).toUpperCase(), de=nenco.decode(a);
+	fn.innerText=n;
+	result.innerHTML=`ファイルから判定した文字コード : <b>${de?enc:'Binary?'}</b>`;
+	ta.value=de||'デコードできませんでした。\nおそらくバイナリファイルです。';
+},
+hex=a=>[...a].map(t=>t.toString(16).padStart(2,'0').toUpperCase()).join(' '),
+text_encode=_=>{
+	if(!before.value)return;
+	let now=performance.now(),b=nenco.encode(before.value,from.value,bom.checked),
+	tt=s=>s+` : ${Math.floor((performance.now()-now)*100)/100} ms`;
+	enco.innerText=tt('Encode');
+	bhex.value=hex(b);
+	let c=to.value=='AUTO'?nenco.detect(b):to.value;
+	now=performance.now();
+	let a=nenco.decode(b,c);
+	deco.innerText=tt('Decode');
+	after.value=a||'変換できませんでした！';
+	det.innerText=a?c.toUpperCase():'';
+	ahex.value=a?hex(nenco.encode(after.value,c)):'';
+},
+sel=a=>a.map(t=>`<option>${t}</option>`),
+ENCODING=['UTF8','UTF16','UTF16LE','UTF32','UTF32LE','CP932','SJIS','EUCJP','EUCJIS2004','ISO2022JP'];
+from.innerHTML=sel(ENCODING);
+to.innerHTML=sel(['AUTO'].concat(ENCODING));
+util.dragdrop(file_decode);
+</script>
+</html>

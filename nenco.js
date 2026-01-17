@@ -205,9 +205,9 @@ toJIS=(c,max=5)=>{
 	}
 	return [0,-1];
 },
-fromJIS=(ku,ten,esc)=>{
+fromJIS=(ku,ten,esc,fall=UNDEF.char)=>{
 	let a=esc>4?jis.x213_2:esc>3?jis.x213_1:esc>2?jis.x212:jis.x208;
-	return a.get((ku<<8)|ten)||UNDEF.char;
+	return a.get((ku<<8)|ten)||fall;
 },
 toSJIS=c=>{
 	let f=len(c)>1, cc=f?-1:cp(c);
@@ -218,16 +218,16 @@ toSJIS=c=>{
 		let trail=a[0]%2?a[1]+0x1F:a[1]+0x7D;
 		if(trail>0x7E)trail++;
 		return [((a[0]+1)>>1)+(a[0]>0x5E?0xB0:0x70),trail];
-	}else return [UNDEF.code];
+	}else return [-1];
 },
 fromSJIS=(b1,b2,cp932=false)=>{
 	if(b1<0x80)return fp(b1);
 	if(b1>0xA0&&b1<0xE0)return fp(b1+0xFEC0);
 	if((b1>0x80&&b1<0xA0)||(b1>0xDF&&b1<0xFD)&&b2>0x3F&&b2<0xFD&&b2!=0x7F){
 		let odd=b2>0x9E,ku=(b1-(b1>0x9F?0xB1:0x71))*2+(odd?2:1),ten=b2-(odd?0x7E:b2>0x7F?0x20:0x1F),
-		c=fromJIS(ku,ten,2);
+		c=fromJIS(ku,ten,2,false);
 		if(cp932) return jis.cp932.get(b1<<8|b2) || c;
-		if(c!=UNDEF.char) return c;
+		if(c) return c;
 		if(b1<0xA0) return fromJIS(ku,ten,4);
 		return fromJIS(0x20+(b1>0xF4||(b1==0xF4&&odd)?2*b1-0x19A:SJIS0213_2_hi[2*(b1-0xF0)+(odd?1:0)]),ten,5);
 	}else return false;
@@ -269,8 +269,7 @@ encode=(s,e,bom=false)=>{ // s => uint8array
 				if(co)continue;
 			}
 			t=toSJIS(q);
-			if(cp932||t[0]!=UNDEF.code) r.push(...t);
-			else if(cp932){}
+			if(cp932||t[0]>=0) r.push(...(cp932&&t[0]<0?[UNDEF.code]:t));
 			else{ // sjis2004
 				let [w,c] = toJIS(q,-3);
 				if(c<0)r.push(UNDEF.code);
