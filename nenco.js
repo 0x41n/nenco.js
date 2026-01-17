@@ -116,7 +116,7 @@ ezweb=[
 fromUTF8=n=>{
 	let i=0,l=len(n),r='',t;
 	if(!isArray(n)||!l)return false;
-	if(equals(a,BOM[0]))i=3;
+	if(equals(n,BOM[0]))i=3;
 	while(i<l){
 		let c=n[i];
 		if(c<0x80)t=c,i++;
@@ -151,7 +151,7 @@ toUTF8=n=>{
 fromUTF16=(n,le=false)=>{
 	let i=0,l=len(n),r='',t;
 	if(!isArray(n)||!l||l%2!=0)return false;
-	if(equals(a,le?BOM[4]:BOM[3]))i=2;
+	if(equals(n,le?BOM[4]:BOM[3]))i=2;
 	while(i<l){
 		let c=n[i];
 		t=le?c|(n[i+1]<<8):(c<<8)|n[i+1];
@@ -180,7 +180,7 @@ toUTF16=(n,le=false)=>{
 fromUTF32=(n,le=false)=>{
 	let i=0,l=len(n),r='',t;
 	if(!isArray(n)||!l||l%4!=0)return false;
-	if(equals(a,le?BOM[2]:BOM[1]))i=4;
+	if(equals(n,le?BOM[2]:BOM[1]))i=4;
 	while(i<l){
 		let c=n[i];
 		if(i+3<l) t=le?c|(n[i+1]<<8)|(n[i+2]<<16)|(n[i+3]<<24):(c<<24)|(n[i+1]<<16)|(n[i+2]<<8)|n[i+3], i+=4;
