@@ -469,10 +469,11 @@ mapJIS=tbl=>{
 		let qq=[...q[1]],l=len(qq);
 		for(i=0;i<l;i++){
 			cc=qq[i];
-			if(i+1<l&&(isComb(cp(qq[i+1]))||(qq[i]=='˩'&&qq[i+1]=='˥')||(qq[i]=='˥'&&qq[i+1]=='˩')))i++,cc+=qq[i];
-			// r.set(s, cc);
-			r[0][s]=cc;
-			r[1][cc]=r[1][cc]||s;
+			if(cc!=UNDEF.char){
+				if(i+1<l&&(isComb(cp(qq[i+1]))||(qq[i]=='˩'&&qq[i+1]=='˥')||(qq[i]=='˥'&&qq[i+1]=='˩')))i++,cc+=qq[i];
+				r[0][s]=cc;
+				r[1][cc]=r[1][cc]||s;
+			}
 			s++;
 			if((s&255)==127)s+=162;
 		}
@@ -487,10 +488,11 @@ mapSJIS=tbl=>{
 		let qq=[...q[1]],l=len(qq);
 		for(i=0;i<l;i++){
 			cc=qq[i];
-			if(i+1<l&&isComb(cp(qq[i+1])))i++,cc+=qq[i];
-			// r.set(s, cc);
-			r[0][s]=cc;
-			r[1][cc]=r[1][cc]||s;
+			if(cc!=UNDEF.char){
+				if(i+1<l&&isComb(cp(qq[i+1])))i++,cc+=qq[i];
+				r[0][s]=cc;
+				r[1][cc]=r[1][cc]||s;
+			}
 			s++;
 			if((s&255)==127)s++;
 			if((s&255)==253)s+=67;
