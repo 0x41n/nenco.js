@@ -89,7 +89,8 @@ console.log(bytes); // [130, 177, 130, 241, 130, 201, 130, 191, 130, 205]
 ```
 - 対応していない文字は`?`として変換されます。
 ## おまけ
-[encoding.js](https://github.com/polygonplanet/encoding.js)よろしく、日本語のちょっとした変換が出来ます。<br>
+文字コードに関連しているようなしていないような<br>
+そんな感じの変換機能です。<br>
 文字列を入れて、文字列を受け取るような関数です。
 
 - `toHan(text)`
@@ -100,9 +101,46 @@ console.log(bytes); // [130, 177, 130, 241, 130, 201, 130, 191, 130, 205]
   - 全半角カタカナをひらがなに変換します
 - `toKata(text)`
   - ひらがなをカタカナに変換します
+- `encodeHTML(text)`
+  - 文字列を`&#65;`のような形に変換します<br>(HTMLエンティティ変換)
+- `decodeHTML(text)`
+  - HTMLエンティティから通常の文字列に変換します
+- `encodeURI(text, allow?, plus_space?, encoding?)`
+  - 文字列を`%E3%81%82`のような形に変換します
+  - `allow`にはエスケープしたくない文字を指定できます
+  - `plus_space`がtrueの時、半角スペースを`+`に置き換えます<br>デフォルトはfalseです(`%20`に変換)
+  - `encoding`はエスケープ時の文字コードを指定できます<br>デフォルトはUTF-8です
+  - 詳細は後述…
+- `decodeURI(text, plus_space?)`
+  - URIエスケープされた文字列を通常の文字列に変換します
+  - `plus_space`がtrueの時、`+`を半角スペースに変換します<br>デフォルトはfalseです(`%20`を半角スペースに変換)
+
+## encodeURIについて
+エスケープしない(`%20`のような形にしない)文字を自由に決められるようになっていますが、<br>RFC3986を参考に、半角英数と`-` `.` `_` `~`の4文字は常にエスケープしないようにしています。<br>
+JavaScript標準の`encodeURI()`と同じ挙動にしたいときは下記のように指定してください。
+```js
+// encodeURI相当
+let uri = nenco.encodeURI(text, "!*'();/?:@&=+$,#");
+// encodeURIComponent()相当
+let component = nenco.encodeURI(text, "!*'()");
+```
+WHATWG基準で変換する場合の例 (正確じゃないかもしれません)
+```js
+// クエリ符号化
+let query = nenco.encodeURI(text, "!*'();:@&=+$,/?");
+// パス符号化
+let path = nenco.encodeURI(text, "!*'();:@&=+$,/");
+// ユーザー情報
+let user = nenco.encodeURI(text, "!*'();:@&=+$,");
+// フラグメント
+let frag = nenco.encodeURI(text, "!*'();:@&=+$,/?");
+// application/x-www-form-urlencoded
+let url = nenco.encodeURI(text, "", true);
+```
 
 ## 使用上の注意
 すべての環境に対応するように作ったわけではないので、<br>
 
 使いやすい形に加工してお使いください。
+
 
